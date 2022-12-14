@@ -33,6 +33,3 @@ export function DeleteUser(userId: Number) {
     })
 }
 
-export function addUser(id: Number) {
-    console.log('addUser' + id);
-}

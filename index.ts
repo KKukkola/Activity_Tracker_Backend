@@ -13,7 +13,7 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Methods", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
- })
+})
 
 app.get('/', function(req: Request, res: Response) {
     res.send("Express + TypeScript Server");
@@ -39,6 +39,7 @@ app.put('/api/users/:id', function(req: Request, res: Response) {
 app.post('/api/users', function(req: Request, res: Response) {
     try {
         // TODO: make sure that the user actually exists on roblox side (AND GET THE NAME)
+        
         const NAME = "NAME";
         db.AddUser(parseInt(req.body.userId))
             .then(results=>res.send({ ...req.body, name: NAME }))
@@ -57,7 +58,6 @@ app.delete('/api/users/:id', function(req: Request, res: Response) {
         res.send(500).json({ message: (err as Error).message })
     }
 })
-
 
 app.listen(port, () => {
     console.log(`🔔[server]: Server is running at https://localhost:${port}`);
