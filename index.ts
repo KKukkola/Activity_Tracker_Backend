@@ -1,12 +1,17 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import wsServer from './socket';
+import WebSocket from 'ws';
+import StartWS from './socket';
 import * as db from './db'
 
 dotenv.config();
 
+const FETCH_PRESENCE_DELAY = 7000;
+
 const app: Express = express();
 const port = process.env.PORT;
+
+const wsServer = StartWS();
 
 app.use(express.json());
 app.use(function (req, res, next) {
@@ -34,17 +39,21 @@ app.put('/api/users/:id', function(req: Request, res: Response) {
     // Look up the user 
     // If not existing, 404
     // If bad req, 400
-    // Return the updated course
+    // Update the user
+    // Return the updated user
 })
 
-app.post('/api/users', function(req: Request, res: Response) {
+app.post('/api/users', async function(req: Request, res: Response) {
     try {
-        // TODO: make sure that the user actually exists on roblox side (AND GET THE NAME)
-        
-        const NAME = "NAME";
-        db.AddUser(parseInt(req.body.userId))
-            .then(results=>res.send({ ...req.body, name: NAME }))
+        // Get the user information from Roblox
+        const userData = await GetUserInformation(req.body.userId);
+        if (!userData || userData.errors) { res.status(404).json({ message: "failed to retrieve user information" }); return; }
+        const userName = userData.name;
+        // Add the user to the database
+        db.AddUser(parseInt(req.body.userId), userName)
+            .then(results=>res.send({ ...req.body, name: userName }))
             .catch(err => res.json({ message: err.message }))
+        res.status(200);
     } catch(err) {
         res.json({ message: (err as Error).message });
     }
@@ -63,3 +72,57 @@ app.delete('/api/users/:id', function(req: Request, res: Response) {
 app.listen(port, () => {
     console.log(`🔔[server]: Server is running at https://localhost:${port}`);
 })
+
+async function GetUserInformation(userId: Number) {
+    console.log("Get User Information: ", userId);
+    let response = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+    let data = await response.json();
+    if (response.status != 200) {
+        console.error("Failed to Get User Information:", userId, response.status);
+        return;
+    }
+    console.log("Got User Data: ", data, response.status);
+    return data;
+}
+
+async function FetchPresences(userIds: Array<Number>) {
+    let response = await fetch(`https://presence.roblox.com/v1/presence/users/`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            userIds: userIds
+        })
+    })
+    const data = await response.json();
+    if (response.ok) {
+        const userPresences = data?.userPresences;
+        if (userPresences) {
+            let presences = userPresences.map((e: any)=>{
+                return {
+                    userId: e.userId,
+                    userPresenceType: e.userPresenceType
+                }
+            });
+            return presences;
+        }
+    }
+    
+    return null;
+}
+
+setInterval(function() {
+    db.GetUsers().then(async function(users) {
+        let userIds = (users as Array<{userId:Number, name:String}>).map(user=>user.userId);
+        let presences = await FetchPresences(userIds);
+        let payload = JSON.stringify(presences);
+        wsServer.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(payload);
+            }
+        });
+        // TODO: store these presences in the database
+    });
+}, FETCH_PRESENCE_DELAY);

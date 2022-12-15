@@ -15,9 +15,9 @@ export function GetUsers() {
     })
 }
 
-export function AddUser(userId: Number) {
+export function AddUser(userId: Number, userName: String) {
     return new Promise((resolve, reject) => {
-        connection.query("INSERT INTO users VALUES(?,?)", [userId, "NAME"], 
+        connection.query("INSERT INTO users VALUES(?,?)", [userId, userName], 
         function(err, results, fields) {
             return err ? reject(err) : resolve(results);
         });

@@ -1,32 +1,42 @@
 import WebSocket from "ws";
 
-const wsServer = new WebSocket.Server({
-    noServer: true
-});
+const port = 8001;
 
-wsServer.on("connection", function(ws) {
+export default function(): WebSocket.Server {
     
-    ws.on("message", function(msg) {
-        wsServer.clients.forEach(function each(client) {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(msg.toString());
-            }
+    const wsServer = new WebSocket.Server({
+        port: port
+    });
+
+    wsServer.on("connection", function(ws) {
+        console.log("Client Connected");
+
+        ws.on("message", function(msg) {
+            wsServer.clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(msg.toString());
+                }
+            });
+        });
+
+        ws.on("close", function() {
+            console.log("Client disconnected");
+        });
+
+        ws.onerror = function() {
+            console.log("Some Error occurred");
+        }
+    })
+
+    wsServer.on('upgrade', async function upgrade(request, socket, head) {
+        
+        // emit connection when request accepted
+        wsServer.handleUpgrade(request, socket, head, function done(ws) {
+        wsServer.emit('connection', ws, request);
         });
     });
 
-})
+    console.log("WebSocket Running at", port);
 
-wsServer.on('upgrade', async function upgrade(request, socket, head) {
-    
-    // accepts half requests and rejects half. Reload browser page in case of rejection
-    // if(Math.random() > 0.5){
-    //     return socket.end("HTTP/1.1 401 Unauthorized\r\n", "ascii")     //proper connection close in case of rejection
-    // }
-    
-    // emit connection when request accepted
-    wsServer.handleUpgrade(request, socket, head, function done(ws) {
-      wsServer.emit('connection', ws, request);
-    });
-});
-
-export default wsServer;
+    return wsServer;
+};
