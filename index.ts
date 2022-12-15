@@ -100,12 +100,10 @@ async function FetchPresences(userIds: Array<Number>) {
     if (response.ok) {
         const userPresences = data?.userPresences;
         if (userPresences) {
-            let presences = userPresences.map((e: any)=>{
-                return {
-                    userId: e.userId,
-                    userPresenceType: e.userPresenceType
-                }
-            });
+            let presences: any = {};
+            userPresences.forEach((presenceObj: any) => {
+                presences[presenceObj.userId] = presenceObj.userPresenceType;
+            })
             return presences;
         }
     }
