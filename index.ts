@@ -1,8 +1,9 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import WebSocket from 'ws';
+import moment from 'moment'
 import StartWS from './socket';
-import * as db from './db'
+import * as db from './db';
 
 dotenv.config();
 
@@ -12,6 +13,9 @@ const app: Express = express();
 const port = process.env.PORT;
 
 const wsServer = StartWS();
+
+const lastStatuses: any = {};
+const lastTimes: any = {};
 
 app.use(express.json());
 app.use(function (req, res, next) {
@@ -111,6 +115,31 @@ async function FetchPresences(userIds: Array<Number>) {
     return null;
 }
 
+function CreateStatusPayload(userId:Number, currentStatus:Number) {
+    
+    let lastStatus = lastStatuses[userId.toString()];
+    let lastTime = lastTimes[userId.toString()];
+    if (lastStatus === undefined) lastStatus = null;
+    if (lastTime === undefined) lastTime = null; 
+
+    let nowTime: any = new Date();
+    let diffTimeSeconds = lastTime && Math.abs(nowTime - lastTime) / 1000 || null;
+    let nowTimeFormatted = moment(nowTime).format("YYYY-MM-DD HH:mm:ss");
+    
+    let data = {
+        userId: userId,
+        status: currentStatus,
+        lastStatus: lastStatus,
+        nowTime: nowTimeFormatted,
+        diffTime: diffTimeSeconds
+    }
+    
+    lastStatuses[userId.toString()] = currentStatus;
+    lastTimes[userId.toString()] = nowTime;
+    
+    return data
+}
+
 setInterval(function() {
     db.GetUsers().then(async function(users) {
         let userIds = (users as Array<{userId:Number, name:String}>).map(user=>user.userId);
@@ -121,6 +150,17 @@ setInterval(function() {
                 client.send(payload);
             }
         });
-        // TODO: store these presences in the database
+        // Store these presences in the database if changes are detected.
+        for (const userId in presences) {
+            const thisStatus = presences[userId];
+            let lastStatus = lastStatuses[userId.toString()];
+            if (lastStatus === undefined) lastStatus = null;
+            // console.log(thisStatus, lastStatus, thisStatus!=lastStatus);
+            if (lastStatus === null || lastStatus != thisStatus) {
+                let payload = CreateStatusPayload(parseInt(userId), thisStatus);
+                console.log("TODO: store this data: ", payload);
+            } 
+        } 
     });
 }, FETCH_PRESENCE_DELAY);
+
