@@ -158,7 +158,8 @@ setInterval(function() {
             // console.log(thisStatus, lastStatus, thisStatus!=lastStatus);
             if (lastStatus === null || lastStatus != thisStatus) {
                 let payload = CreateStatusPayload(parseInt(userId), thisStatus);
-                console.log("TODO: store this data: ", payload);
+                db.LogStatus(payload);
+                console.log("saved data: ", payload);
             } 
         } 
     });

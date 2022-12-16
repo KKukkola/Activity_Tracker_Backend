@@ -34,16 +34,12 @@ export function DeleteUser(userId: Number) {
 }
 
 export function LogStatus(data: any) {
-    
-    // connection.query(`INSERT INTO tests VALUES (?, ?, ?, ?, ?);`, 
-    //     [params.userId, params.nowTime, params.status, params.lastStatus, params.diffTime], 
-    //     function (err, results, fields) {
-    //         if (err) {
-    //             console.log(err);
-    //             res.send(err);
-    //         } else {
-    //             res.send({results: results, fields: fields})
-    //         }
-    //     });
+    return new Promise((resolve, reject) => {
+        connection.query(`INSERT INTO logged VALUES (?,?,?,?,?);`,
+        [data.userId, data.nowTime, data.status, data.lastStatus, data.diffTime],
+        function(err, results, fields) {
+            return err ? reject(err) : resolve(results);
+        });
+    })
 }
 
