@@ -43,3 +43,17 @@ export function LogStatus(data: any) {
     })
 }
 
+export function GetTimeFrame(userId:number, today: any) {
+    return new Promise((resolve, reject) => {
+        connection.query(`CALL Query_User_Between (?,?,?);`,
+        [userId, today.minDate, today.maxDate],
+        function (err, results, fields) {
+            return err ? reject(err) : resolve(results);
+        })
+    })
+}
+
+
+
+
+

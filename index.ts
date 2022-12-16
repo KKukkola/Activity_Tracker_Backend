@@ -73,9 +73,12 @@ app.delete('/api/users/:id', function(req: Request, res: Response) {
     }
 })
 
-app.get('/api/statuses/', function(req: Request, res: Response) {
+app.get('/api/logged/today/:id', function(req: Request, res: Response) {
     try {
-
+        const today = GetTodayDate();
+        db.GetTimeFrame(parseInt(req.params.id), today)
+            .then(results => res.send(results))
+            .catch(err => res.send({ message: err.message }));
     } catch(err) {
         res.send(500).json({ message: (err as Error).message });
     }
@@ -84,6 +87,23 @@ app.get('/api/statuses/', function(req: Request, res: Response) {
 app.listen(port, () => {
     console.log(`🔔[server]: Server is running at https://localhost:${port}`);
 })
+
+
+function GetTodayDate() {
+    let thisDate = new Date();
+    let year = thisDate.getFullYear();
+    let month = thisDate.getMonth() + 1;
+    let day = thisDate.getDate();
+
+    let monthText = String(month).padStart(2, '0');
+    let dayText = String(day).padStart(2, '0');
+    
+    return {
+        minDate: `${year}/${monthText}/${dayText} 00:00:00`,
+        maxDate: `${year}/${monthText}/${dayText} 23:59:59`
+    }
+}
+
 
 async function GetUserInformation(userId: Number) {
     console.log("Get User Information: ", userId);
