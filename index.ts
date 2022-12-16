@@ -69,7 +69,15 @@ app.delete('/api/users/:id', function(req: Request, res: Response) {
             .then(results => res.send(results))
             .catch(err => res.send({ message: err.message }))
     } catch(err) {
-        res.send(500).json({ message: (err as Error).message })
+        res.send(500).json({ message: (err as Error).message });
+    }
+})
+
+app.get('/api/statuses/', function(req: Request, res: Response) {
+    try {
+
+    } catch(err) {
+        res.send(500).json({ message: (err as Error).message });
     }
 })
 
