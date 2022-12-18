@@ -34,6 +34,7 @@ app.get('/api/users', async function(req: Request, res: Response) {
         db.GetUsers()
             .then(results => { res.send(results); })
             .catch(err => { res.json({ message: err.message }); })
+        UpdateStatuses();
     } catch (err) {
         res.status(500).json({ message: (err as Error).message });
     }
@@ -112,48 +113,36 @@ async function GetUserInformation(userId: Number) {
         })
         .catch(err => { reject(err); });
     })
-    
-    // let data = await response.json();
-    // if (response.status != 200) {
-    //     console.error("Failed to Get User Information:", userId, response.status);
-    //     return;
-    // }
-    // console.log("Got User Data: ", data, response.status);
-    
-    // let response = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-    // let data = await response.json();
-    // if (response.status != 200) {
-    //     console.error("Failed to Get User Information:", userId, response.status);
-    //     return;
-    // }
-    // console.log("Got User Data: ", data, response.status);
-    // return data;
 }
 
 async function FetchPresences(userIds: Array<Number>) {
-    let response = await fetch(`https://presence.roblox.com/v1/presence/users/`, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            userIds: userIds
-        })
-    })
-    const data = await response.json();
-    if (response.ok) {
-        const userPresences = data?.userPresences;
-        if (userPresences) {
-            let presences: any = {};
-            userPresences.forEach((presenceObj: any) => {
-                presences[presenceObj.userId] = presenceObj.userPresenceType;
+    return new Promise((resolve, reject) => {
+        fetch(`https://presence.roblox.com/v1/presence/users/`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userIds: userIds
             })
-            return presences;
-        }
-    }
-    
-    return null;
+        })
+        .then(response => {
+            response.json()
+                .then(data => {
+                    const userPresences = data?.userPresences;
+                    if (userPresences) {
+                        let presences: any = {};
+                        userPresences.forEach((presenceObj: any) => {
+                            presences[presenceObj.userId] = presenceObj.userPresenceType;
+                        })
+                        resolve(presences);
+                    }
+                })
+                .catch(err => reject(err)) 
+        })
+        .catch(err => reject(err))
+    })
 }
 
 function CreateStatusPayload(userId:Number, currentStatus:Number) {
@@ -181,10 +170,10 @@ function CreateStatusPayload(userId:Number, currentStatus:Number) {
     return data
 }
 
-setInterval(function() {
+function UpdateStatuses() {
     db.GetUsers().then(async function(users) {
         let userIds = (users as Array<{userId:Number, name:String}>).map(user=>user.userId);
-        let presences = await FetchPresences(userIds);
+        let presences:any = await FetchPresences(userIds);
         let payload = JSON.stringify(presences);
         wsServer.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
@@ -203,5 +192,9 @@ setInterval(function() {
             } 
         } 
     });
+}
+
+setInterval(function() {
+    UpdateStatuses();
 }, FETCH_PRESENCE_DELAY);
 
