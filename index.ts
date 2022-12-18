@@ -46,7 +46,7 @@ app.get('/api/users', async function(req: Request, res: Response) {
 app.post('/api/users', async function(req: Request, res: Response) {
     try {
         // Get the user information from Roblox
-        const userData = await GetUserInformation(req.body.userId);
+        const userData: any = await GetUserInformation(req.body.userId);
         if (!userData || userData.errors) { res.status(404).json({ message: "failed to retrieve user information" }); return; }
         const userName = userData.name;
         // Add the user to the database
@@ -103,14 +103,31 @@ function GetTodayDate() {
 
 async function GetUserInformation(userId: Number) {
     console.log("Get User Information: ", userId);
-    let response = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-    let data = await response.json();
-    if (response.status != 200) {
-        console.error("Failed to Get User Information:", userId, response.status);
-        return;
-    }
-    console.log("Got User Data: ", data, response.status);
-    return data;
+    return new Promise((resolve, reject) => {
+        fetch(`https://users.roblox.com/v1/users/${userId}`)
+        .then(response => {
+            response.json()
+                .then(data=>{ resolve(data); })
+                .catch(err=>{ reject(err); })
+        })
+        .catch(err => { reject(err); });
+    })
+    
+    // let data = await response.json();
+    // if (response.status != 200) {
+    //     console.error("Failed to Get User Information:", userId, response.status);
+    //     return;
+    // }
+    // console.log("Got User Data: ", data, response.status);
+    
+    // let response = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+    // let data = await response.json();
+    // if (response.status != 200) {
+    //     console.error("Failed to Get User Information:", userId, response.status);
+    //     return;
+    // }
+    // console.log("Got User Data: ", data, response.status);
+    // return data;
 }
 
 async function FetchPresences(userIds: Array<Number>) {
