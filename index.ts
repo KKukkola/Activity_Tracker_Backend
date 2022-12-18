@@ -7,7 +7,7 @@ import * as db from './db';
 
 dotenv.config();
 
-const FETCH_PRESENCE_DELAY = 7000;
+const FETCH_PRESENCE_DELAY = 120 * 1000;
 
 const app: Express = express();
 const port = process.env.PORT;
@@ -39,13 +39,9 @@ app.get('/api/users', async function(req: Request, res: Response) {
     }
 })
 
-app.put('/api/users/:id', function(req: Request, res: Response) {
-    // Look up the user 
-    // If not existing, 404
-    // If bad req, 400
-    // Update the user
-    // Return the updated user
-})
+// app.put('/api/users/:id', function(req: Request, res: Response) {
+    
+// })
 
 app.post('/api/users', async function(req: Request, res: Response) {
     try {
@@ -183,7 +179,6 @@ setInterval(function() {
             const thisStatus = presences[userId];
             let lastStatus = lastStatuses[userId.toString()];
             if (lastStatus === undefined) lastStatus = null;
-            // console.log(thisStatus, lastStatus, thisStatus!=lastStatus);
             if (lastStatus === null || lastStatus != thisStatus) {
                 let payload = CreateStatusPayload(parseInt(userId), thisStatus);
                 db.LogStatus(payload);
