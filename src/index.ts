@@ -5,6 +5,8 @@ import moment from 'moment'
 import StartWS from './socket';
 import * as db from './db';
 
+const router = express();
+
 dotenv.config();
 
 const FETCH_PRESENCE_DELAY = 120 * 1000;
@@ -16,6 +18,10 @@ const wsServer = StartWS();
 
 const lastStatuses: any = {};
 const lastTimes: any = {};
+
+const StartServer = () => {
+
+}
 
 app.use(express.json());
 app.use(function (req, res, next) {
