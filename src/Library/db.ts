@@ -1,7 +1,7 @@
 import mysql from "mysql";
 import dotenv from "dotenv";
 
-dotenv.config(); // Load into process.env
+dotenv.config(); // Loads into process.env
 
 const MYSQL_HOST = process.env.MYSQL_HOST || '';
 const MYSQL_USERNAME = process.env.MYSQL_USERNAME || '';
