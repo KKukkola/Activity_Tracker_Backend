@@ -13,4 +13,4 @@ export const db = mysql.createConnection({
     user: MYSQL_USERNAME,
     password: MYSQL_PASSWORD,
     database: MYSQL_DB,
-})
+});

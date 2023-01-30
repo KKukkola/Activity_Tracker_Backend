@@ -7,6 +7,7 @@ import express, { Express, Request, Response } from 'express';
 import http from "http";
 import { db } from './Library/db';
 import Logging from './Library/Logging';
+import userRoutes from './Routes/UserRoutes';
 
 const router = express();
 
@@ -43,14 +44,14 @@ const StartServer = () => {
       res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
       return res.status(200).json({});
     }
-
-    next(); // Go through this.
+    next();
   });
 
   router.use(express.urlencoded({ extended: true }));
   router.use(express.json());
 
   // Set Routes.
+  router.use('/users', userRoutes);
 
   // Ping.
   router.get('/ping', (req, res, next) => res.status(200).json({ message: "pong" }));

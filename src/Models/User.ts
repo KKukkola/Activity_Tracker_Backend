@@ -1,5 +1,5 @@
 
-export interface User {
-    name: string,
-    id: number
-}
+export default interface User {
+    name: string;
+    id: number;
+};
