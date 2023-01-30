@@ -8,6 +8,7 @@ import http from "http";
 import { db } from './Library/db';
 import Logging from './Library/Logging';
 import userRoutes from './Routes/UserRoutes';
+import statusRoutes from './Routes/StatusRoutes';
 
 const router = express();
 
@@ -52,7 +53,7 @@ const StartServer = () => {
 
   // Set Routes.
   router.use('/users', userRoutes);
-
+  router.use('/statuses', statusRoutes);
   // Ping.
   router.get('/ping', (req, res, next) => res.status(200).json({ message: "pong" }));
 
