@@ -13,10 +13,11 @@ db.connect(function(err) {
   if (err){
     console.log("Error connecting to MySql");
     console.log(err);
-  } else {
-    console.log("MySQL Connected");
-    StartServer();
-  }
+    return;   
+  } 
+
+  console.log("MySQL Connected");
+  StartServer();
 });
 
 const StartServer = () => {
