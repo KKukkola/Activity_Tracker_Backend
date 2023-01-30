@@ -4,24 +4,66 @@ import express, { Express, Request, Response } from 'express';
 // import moment from 'moment'
 // import StartWS from './socket';
 // import * as db from './db';
+import http from "http";
 import { db } from './Library/db';
+import Logging from './Library/Logging';
 
 const router = express();
 
 //** Connect to MySQL */
 db.connect(function(err) {
   if (err){
-    console.log("Error connecting to MySql");
-    console.log(err);
+    Logging.error("Error connecting to MySql:");
+    Logging.error(err);
     return;   
   } 
 
-  console.log("MySQL Connected");
+  Logging.log("Connected to MySql");
   StartServer();
 });
 
+//** Start the server. */
 const StartServer = () => {
-    console.log("TODO: Start the server");
+  
+  // Log the Requests.
+  router.use((req, res, next) => {
+    Logging.info(`Incoming -> Method: [${req.method}] Url: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
+    res.on('finish', () => {
+      Logging.info(`Incoming -> Method: [${req.method}] - Url: [${req.url}] - IP: [${req.socket.remoteAddress}] - Status: [${res.statusCode}]`);
+    })
+    next();
+  })
+  
+  // Set API Rules.
+  router.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); // These request can come from anywhere
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization'); // What headers are allowed in the project
+
+    if (req.method == 'OPTIONS') {
+      res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+      return res.status(200).json({});
+    }
+
+    next(); // Go through this.
+  });
+
+  router.use(express.urlencoded({ extended: true }));
+  router.use(express.json());
+
+  // Set Routes.
+
+  // Ping.
+  router.get('/ping', (req, res, next) => res.status(200).json({ message: "pong" }));
+
+  // Handle Errors.
+  router.use((req, res, next) => {
+    const error = new Error('not found');
+    Logging.error(error);
+
+    return res.status(404).json({ message: error.message });
+  });
+
+  http.createServer(router).listen(process.env.SERVER_PORT, () => Logging.info(`Server is running on port ${process.env.SERVER_PORT}`));
 }
 
 // const FETCH_PRESENCE_DELAY = 120 * 1000;
