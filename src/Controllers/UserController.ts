@@ -22,7 +22,17 @@ const createUser = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const readUser = (req: Request, res: Response, next: NextFunction) => {
-    const { name, id } = req.body;
+    const id = req.params.userId;
+
+    db.query(`SELECT * FROM users WHERE id=?`, id,
+    function(err, results) {
+        console.log(results);
+        if (err) {
+            res.status(500).json({ err });
+        } else {
+            res.status(200).json( results[0] );
+        }
+    })
 
 }
 
@@ -37,7 +47,7 @@ const readAll = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const updateUser = (req: Request, res: Response, next: NextFunction) => {
-
+    // Not necessary, users are just deleted and re-added
 }
 
 const deleteUser = (req: Request, res: Response, next: NextFunction) => {
